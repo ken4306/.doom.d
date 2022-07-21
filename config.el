@@ -76,25 +76,33 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
+;;; :ui
 ;; fullscreen
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
+
+;; Change theme to solarize-dark
+(load-theme 'doom-solarized-dark t)
+
+;;; :editor evil
+;; Focus new window after splitting
+(setq evil-split-window-below t
+      evil-vsplit-window-right t)
 
 ;; vanilla emacs keybinding in insert state
 ;; (map! (:after evil
 ;;        :i "C-k" nil
 ;;        :i "C-d" 'delete-char))
 (setq! evil-disable-insert-state-bindings t)
-;; focus new window after splitting
-(setq evil-split-window-below t
-      evil-vsplit-window-right t)
 
-;; tweak doom-modeline
+;;; :ui modeline
+;; Tweak doom-modeline
 (setq! doom-modeline-major-mode-icon t
        doom-modeline-hud t
        doom-modeline-bar-width 10
        doom-modeline-hud-min-height 6)
 
-;; tweak window-select
+;;; :ui window-select
+;; Tweak window-select
 (setq! aw-dispatch-when-more-than 1)
 (map! (:after evil :map evil-window-map
        "w" 'ace-window
@@ -113,28 +121,91 @@
        "0" 'winum-select-window-0-or-10
        ))
 
+(map! (:map global-map
+      "M-SPC" 'doom/leader))
+
+;;; :emacs dired
 ;; tweak dired
 (map! (:after dired :map dired-mode-map
        :n "l" 'dired-find-file
        :n "h" 'dired-up-directory
        ))
 
+;;; :editor projectile
 ;; projectile ignore file
-(setq projectile-indexing-method 'native)
+(setq projectile-indexing-method 'alien)
 
-;; vterm improved
-(setq vterm-use-vterm-prompt-detection-method t)
+;; use .ignore and .fdignore to ignore file and find project root
+;; those two file is used by fd-find
+(after! projectile
+  (add-to-list 'projectile-project-root-files-bottom-up ".ignore" ".fdignore"))
 
-(defun vti/send-C-k ()
-    (interactive)
-    (vterm-goto-char (point))
-    (call-interactively #'vterm-send-C-k))
+;; use .gitignore to determine project-vcs
+;; NOTE: useless because fdfind need .git folder
+;; (defun projectile-gitignore-as-git (orig-fun &optional project-root)
+;;   (or project-root (setq project-root (projectile-acquire-root)))
+;;   (cond
+;;    ((projectile-file-exists-p (expand-file-name ".gitignore" project-root)) 'git)
+;;    (t (apply orig-fun project-root nil))))
+;; (advice-add 'projectile-project-vcs :around #'projectile-gitignore-as-git)
 
+;;; :term vterm
+(defun vterm-send-meta-up ()
+  (interactive)
+  (vterm-send-key "<up>" nil t))
+
+(defun vterm-send-meta-down ()
+  (interactive)
+  (vterm-send-key "<down>" nil t))
+
+;; forward Esc to vterm
 (map! :map vterm-mode-map
-      :i "C-a" 'vterm-send-C-a
-      :n "0" 'vterm-beginning-of-line
-      :n "C-k" 'vti/send-C-k
-      :n "C-p" 'vterm-send-C-p
-      :n "C-n" 'vterm-send-C-n
-      :n "G" 'vterm-reset-cursor-point)
-;; TODO if switch to insert-state at invalid position, reset cursor point
+      :e "<escape>" #'vterm-send-escape
+      :e "M-<up>" #'vterm-send-meta-up
+      :e "M-<down>" #'vterm-send-meta-down)
+
+;; bind normal-state with copy-mode
+(add-hook! 'vterm-mode-hook
+           #'evil-emacs-state
+           (add-hook! 'evil-emacs-state-entry-hook :local (vterm-copy-mode 0))
+           (add-hook! 'evil-emacs-state-exit-hook :local (vterm-copy-mode 1)))
+
+;;; :tools lookup
+;; add google translate to lookup online provider list
+(add-to-list
+ '+lookup-provider-url-alist
+ '("Google Translate" "https://translate.google.com.tw/?sl=en&tl=zh-TW&text=%s"))
+
+;;; lang cc
+;; set indent style to cc-mode
+(add-hook! 'c-mode-common-hook (c-set-style "doom"))
+
+;;; :misc secret
+;; load secret info
+(load! ".secret.el")
+
+;; Associate calender with org file
+(setq org-gcal-fetch-file-alist
+      '(("ken4306@gmail.com" . "~/schedule.org")
+        ("zh-tw.taiwan#holiday@group.v.calendar.google.com" . "~/schedule.org")))
+
+(defun my-open-calendar ()
+  (interactive)
+  (cfw:open-calendar-buffer
+   :contents-sources
+   (list
+    (cfw:org-create-source (face-foreground 'default))  ; org-agenda source
+    (cfw:org-create-file-source "cal" "~/schedule.org" "IndianRed")  ; other org source
+    ;;(cfw:ical-create-source "gcal" "https://..../basic.ics" "IndianRed") ; google calendar ICS
+   )))
+
+(setq +calendar-open-function #'my-open-calendar)
+
+
+
+;;; :misc function
+;; Misc functions and bindings
+(defun misc/print-fun ()
+    (interactive)
+  (print (+ 1 1)))
+(map! :n "C-S-p" 'print-fun)
