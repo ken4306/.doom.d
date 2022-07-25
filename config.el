@@ -78,7 +78,7 @@
 
 ;;; :ui
 ;; fullscreen
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
+;;(add-to-list 'default-frame-alist '(fullscreen . maximized))
 
 ;; Change theme to solarize-dark
 (load-theme 'doom-solarized-dark t)
@@ -182,7 +182,7 @@
 
 ;;; :misc secret
 ;; load secret info
-(load! ".secret.el")
+;; (load! ".secret.el")
 
 ;; Associate calender with org file
 (setq org-gcal-fetch-file-alist
