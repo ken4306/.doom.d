@@ -29,7 +29,7 @@
 ;; refresh your font settings. If Emacs still can't find your font, it likely
 ;; wasn't installed correctly. Font issues are rarely Doom issues!
 (setq! doom-font (font-spec :family "Fira Code" :size 15 :weight 'regular))
-(setq! doom-unicode-font (font-spec :family "Source Code Pro for Powerline"))
+(setq! doom-unicode-font (font-spec :family "Fira Code"))
 
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
@@ -207,6 +207,22 @@
 ;;; :misc function
 ;; Misc functions and bindings
 (defun misc/print-fun ()
-    (interactive)
+  (interactive)
   (print (+ 1 1)))
 (map! :n "C-S-p" 'print-fun)
+
+;;; :ami
+;; Insert md5 checksum for mds signing
+(defun ami/insert-md5 ()
+  (interactive)
+  (let (md5-str)
+    (save-excursion
+      (goto-char (point-min))
+      (forward-line 1)
+      (setq md5-str
+            (md5 (current-buffer) (point) (point-max))))
+    (insert md5-str)))
+
+;; Do not add newline at EOF
+(setq require-final-newline nil)
+(setq mode-require-final-newline nil)
