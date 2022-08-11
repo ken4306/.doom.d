@@ -214,7 +214,6 @@
 ;;; :ami
 ;; Insert md5 checksum for mds signing
 (defun ami/insert-md5 ()
-  (interactive)
   (let (md5-str)
     (save-excursion
       (goto-char (point-min))
@@ -222,6 +221,24 @@
       (setq md5-str
             (md5 (current-buffer) (point) (point-max))))
     (insert md5-str)))
+
+;; Find md5 checksum
+(defun ami/find-checksum ()
+   (string-match "[0-9a-z]\\{32\\}" (buffer-string)))
+
+;; Sign PRJ file
+;; TODO: Insert sign massage if checksum not found.
+(defun ami/sign-prj ()
+  (interactive)
+  (save-excursion
+    (let ((pos (ami/find-checksum)))
+      (cond
+       (pos
+        (goto-char (1+ pos))
+        (delete-char 32)
+        (ami/insert-md5))
+       (t
+        (goto-char (point-min)))))))
 
 ;; Do not add newline at EOF
 (setq require-final-newline nil)
